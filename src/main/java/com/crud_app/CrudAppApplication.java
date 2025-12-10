@@ -8,6 +8,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class CrudAppApplication {
     public static void main(String[] args) {
         SpringApplication.run(CrudAppApplication.class, args);
-        System.out.println("Приложение запущено! Откройте: http://localhost:8080");
+        System.out.println("Приложение запущено! Откройте: http://localhost:8080/items");
     }
 }
