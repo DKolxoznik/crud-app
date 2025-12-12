@@ -8,6 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,10 +17,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ItemService {
 
-    private final ItemRepository itemRepository;
+    private final ItemRepository repository;
 
     public List<Item> getAllItems() {
-        return itemRepository.findAll();
+        return repository.findAll();
     }
 
     public Page<Item> getAllItemsPaginated(int page, int size, String sortBy, String direction) {
@@ -28,23 +29,23 @@ public class ItemService {
                 : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        return itemRepository.findAll(pageable);
+        return repository.findAll(pageable);
     }
 
     public Page<Item> searchItems(String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return itemRepository.findByNameContainingIgnoreCase(keyword, pageable);
+        return repository.searchByKeyword(keyword, pageable);
     }
 
     public Optional<Item> getItemById(UUID id) {
-        return itemRepository.findById(id);
+        return repository.findById(id);
     }
 
     public Item saveItem(Item item) {
-        return itemRepository.save(item);
+        return repository.save(item);
     }
 
     public void deleteItem(UUID id) {
-        itemRepository.deleteById(id);
+        repository.deleteById(id);
     }
 }

@@ -31,21 +31,17 @@ public class Item {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    // Чисто для красоты отображения даты создания
+    // Метод для красивого отображения даты
     public String getFormattedCreatedAt() {
         if (createdAt == null) return "";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd | HH:mm:ss");
-        return createdAt.format(formatter);
+        return createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd | HH:mm:ss"));
     }
 
-    // Чисто для красоты отображения даты обновления
     public String getFormattedUpdatedAt() {
         if (updatedAt == null) return "";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd | HH:mm:ss");
-        return updatedAt.format(formatter);
+        return updatedAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd | HH:mm:ss"));
     }
 
-    // Проверка, обновлялась ли запись
     public boolean isUpdated() {
         return updatedAt != null && !updatedAt.equals(createdAt);
     }
