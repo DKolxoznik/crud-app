@@ -31,3 +31,13 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# База данных SQLite
+data/
+*.db
+*.sqlite
+*.db-journal
+
+# Служебные файлы SQLite
+*.db-shm
+*.db-wal
