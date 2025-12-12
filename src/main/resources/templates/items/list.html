@@ -4,49 +4,263 @@
     <meta charset="UTF-8">
     <title>Список записей</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        .table-hover tbody tr:hover {
+            background-color: rgba(0, 123, 255, 0.05);
+        }
+        .pagination .page-item.active .page-link {
+            background-color: #0d6efd;
+            border-color: #0d6efd;
+        }
+        .form-control:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+    </style>
 </head>
 <body>
 <div class="container mt-4">
-    <h1>Список записей</h1>
+    <!-- Заголовок -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="bi bi-list-check"></i> Список записей
+            <small class="text-muted fs-6">
+                (<span th:text="${totalItems}">0</span> записей)
+            </small>
+        </h1>
+        <a th:href="@{/items/new}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Добавить
+        </a>
+    </div>
 
-    <!-- Кнопка "Добавить" -->
-    <a th:href="@{/items/new}" class="btn btn-success mb-3">
-        + Добавить новую запись
-    </a>
+    <!-- ПАНЕЛЬ ПОИСКА И ФИЛЬТРАЦИИ -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form th:action="@{/items}" method="get" class="row g-3">
+                <!-- Поиск по названию/описанию -->
+                <div class="col-md-6">
+                    <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                        <input type="text" class="form-control"
+                               name="keyword"
+                               th:value="${keyword}"
+                               placeholder="Поиск по названию или описанию...">
+                    </div>
+                </div>
 
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Название</th>
-            <th>Описание</th>
-            <th>Создано</th>
-            <th>Действия</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="item : ${items}">
-            <td th:text="${item.id}"></td>
-            <td th:text="${item.name}"></td>
-            <td th:text="${item.description}"></td>
-            <td th:text="${item.createdAt}"></td>
-            <td>
-                <!-- Кнопка "Изменить" -->
-                <a th:href="@{/items/edit/{id}(id=${item.id})}"
-                   class="btn btn-primary btn-sm">
-                    Изменить
-                </a>
+                <!-- Фильтр по дате -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-calendar"></i>
+                            </span>
+                        <input type="date" class="form-control"
+                               name="dateFrom"
+                               th:value="${dateFrom}"
+                               placeholder="Дата от...">
+                    </div>
+                </div>
 
-                <!-- Кнопка "Удалить" -->
-                <a th:href="@{/items/delete/{id}(id=${item.id})}"
-                   class="btn btn-danger btn-sm"
-                   onclick="return confirm('Удалить эту запись?')">
-                    Удалить
-                </a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
+                <!-- Кнопки -->
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel"></i> Найти
+                    </button>
+                </div>
+
+                <!-- Скрытые поля для пагинации -->
+                <input type="hidden" name="page" th:value="0">
+                <input type="hidden" name="size" th:value="${pageSize}">
+                <input type="hidden" name="sort" th:value="${sortField}">
+                <input type="hidden" name="dir" th:value="${sortDir}">
+            </form>
+        </div>
+    </div>
+
+    <!-- ТАБЛИЦА -->
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                    <tr>
+                        <th>
+                            <a th:href="@{/items(page=0, size=${pageSize}, sort='name', dir=${sortField == 'name' and sortDir == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, dateFrom=${dateFrom})}">
+                                Название
+                                <i th:if="${sortField == 'name'}"
+                                   th:class="${sortDir == 'asc' ? 'bi bi-sort-up' : 'bi bi-sort-down'}"></i>
+                            </a>
+                        </th>
+                        <th>Описание</th>
+                        <th>
+                            <a th:href="@{/items(page=0, size=${pageSize}, sort='createdAt', dir=${sortField == 'createdAt' and sortDir == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, dateFrom=${dateFrom})}">
+                                Создано
+                                <i th:if="${sortField == 'createdAt'}"
+                                   th:class="${sortDir == 'asc' ? 'bi bi-sort-up' : 'bi bi-sort-down'}"></i>
+                            </a>
+                        </th>
+                        <th>Обновлено</th>
+                        <th class="text-end">Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${itemsPage.content}" th:object="${item}">
+                        <td>
+                            <strong th:text="*{name}">Название</strong>
+                        </td>
+                        <td>
+                            <span th:text="*{description} ?: '-'">Описание</span>
+                        </td>
+                        <td>
+                                    <span class="text-muted"
+                                          th:text="${#temporals.format(item.createdAt, 'yyyy-MM-dd | HH:mm:ss')}">
+                                        2025-12-10 | 14:16:13
+                                    </span>
+                        </td>
+                        <td>
+                                    <span class="text-muted"
+                                          th:if="${item.updatedAt != null}"
+                                          th:text="${#temporals.format(item.updatedAt, 'yyyy-MM-dd | HH:mm:ss')}">
+                                        2025-12-10 | 14:16:13
+                                    </span>
+                            <span class="text-muted fst-italic" th:unless="${item.updatedAt != null}">
+                                        не изменялось
+                                    </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a th:href="@{/items/edit/{id}(id=${item.id})}"
+                                   class="btn btn-outline-primary">
+                                    <i class="bi bi-pencil"></i> Изменить
+                                </a>
+                                <a th:href="@{/items/delete/{id}(id=${item.id})}"
+                                   class="btn btn-outline-danger"
+                                   onclick="return confirm('Удалить запись &quot;' + [[${item.name}]] + '&quot;?')">
+                                    <i class="bi bi-trash"></i> Удалить
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Если записей нет -->
+                    <tr th:if="${itemsPage.empty}">
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox display-6 d-block mb-2"></i>
+                            <h5>Записей не найдено</h5>
+                            <p class="mb-0">Используйте поиск или добавьте новую запись</p>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ПАГИНАЦИЯ -->
+        <div class="card-footer" th:if="${totalPages > 1}">
+            <div class="d-flex justify-content-between align-items-center">
+                <!-- Информация о странице -->
+                <div class="text-muted">
+                    Показано
+                    <span th:text="${itemsPage.number * itemsPage.size + 1}">1</span>
+                    -
+                    <span th:text="${(itemsPage.number + 1) * itemsPage.size > totalItems ? totalItems : (itemsPage.number + 1) * itemsPage.size}">
+                            10
+                        </span>
+                    из <span th:text="${totalItems}">100</span>
+                </div>
+
+                <!-- Навигация по страницам -->
+                <nav>
+                    <ul class="pagination mb-0">
+                        <!-- Первая страница -->
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                            <a class="page-link"
+                               th:href="@{/items(page=0, size=${pageSize}, sort=${sortField}, dir=${sortDir}, keyword=${keyword}, dateFrom=${dateFrom})}">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+
+                        <!-- Предыдущая страница -->
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled' : ''">
+                            <a class="page-link"
+                               th:href="@{/items(page=${currentPage - 1}, size=${pageSize}, sort=${sortField}, dir=${sortDir}, keyword=${keyword}, dateFrom=${dateFrom})}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        <!-- Номера страниц -->
+                        <li class="page-item"
+                            th:each="pageNum : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:classappend="${pageNum == currentPage} ? 'active' : ''">
+                            <a class="page-link"
+                               th:href="@{/items(page=${pageNum}, size=${pageSize}, sort=${sortField}, dir=${sortDir}, keyword=${keyword}, dateFrom=${dateFrom})}"
+                               th:text="${pageNum + 1}">
+                                1
+                            </a>
+                        </li>
+
+                        <!-- Следующая страница -->
+                        <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled' : ''">
+                            <a class="page-link"
+                               th:href="@{/items(page=${currentPage + 1}, size=${pageSize}, sort=${sortField}, dir=${sortDir}, keyword=${keyword}, dateFrom=${dateFrom})}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+
+                        <!-- Последняя страница -->
+                        <li class="page-item" th:classappend="${currentPage >= totalPages - 1} ? 'disabled' : ''">
+                            <a class="page-link"
+                               th:href="@{/items(page=${totalPages - 1}, size=${pageSize}, sort=${sortField}, dir=${sortDir}, keyword=${keyword}, dateFrom=${dateFrom})}">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Выбор размера страницы -->
+                <div class="d-flex align-items-center">
+                    <span class="text-muted me-2">Записей на странице:</span>
+                    <select class="form-select form-select-sm w-auto"
+                            onchange="changePageSize(this)">
+                        <option th:selected="${pageSize == 5}" value="5">5</option>
+                        <option th:selected="${pageSize == 10}" value="10">10</option>
+                        <option th:selected="${pageSize == 20}" value="20">20</option>
+                        <option th:selected="${pageSize == 50}" value="50">50</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Информация о сортировке -->
+    <div class="mt-3 text-muted small">
+        <i class="bi bi-info-circle"></i>
+        Сортировка по:
+        <span th:text="${sortField == 'name' ? 'Названию' : 'Дате создания'}"></span>
+        (<span th:text="${sortDir == 'asc' ? 'А-Я / Старые' : 'Я-А / Новые'}"></span>)
+    </div>
 </div>
+
+<script>
+    // Изменение размера страницы
+    function changePageSize(select) {
+        const size = select.value;
+        const url = new URL(window.location.href);
+        url.searchParams.set('size', size);
+        url.searchParams.set('page', '0'); // Вернуться на первую страницу
+        window.location.href = url.toString();
+    }
+
+    // Автофокус на поле поиска
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.querySelector('input[name="keyword"]');
+        if (searchInput && !searchInput.value) {
+            searchInput.focus();
+        }
+    });
+</script>
 </body>
 </html>
