@@ -281,14 +281,17 @@
         </div>
     </div>
 
-    <!-- Информация о сортировке -->
     <div class="mt-3 text-muted small">
         <i class="bi bi-info-circle"></i>
-        Сортировка по:
-        <span th:text="${sortField == 'name' ? 'Названию' : 'Дате создания'}"></span>
-        (<span th:text="${sortDir == 'asc' ? 'А-Я / Старые' : 'Я-А / Новые'}"></span>)
+        Текущая сортировка:
+        <strong>
+        <span th:text="${sortField == 'name' ? 'по названию' :
+                         sortField == 'description' ? 'по описанию' :
+                         sortField == 'createdAt' ? 'по дате создания' :
+                         'по дате обновления'}"></span>
+            (<span th:text="${sortDir == 'asc' ? 'А-Я / Старые → Новые' : 'Я-А / Новые → Старые'}"></span>)
+        </strong>
     </div>
-</div>
 
 <script>
     function changePageSize(select) {
