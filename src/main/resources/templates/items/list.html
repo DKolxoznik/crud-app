@@ -91,10 +91,6 @@
                     <button type="submit" class="btn btn-primary w-100 me-2">
                         <i class="bi bi-funnel"></i> Применить фильтры
                     </button>
-                    <button type="button" class="btn btn-outline-secondary w-100 mt-2"
-                            onclick="clearFilters()">
-                        <i class="bi bi-x-circle"></i> Сбросить всё
-                    </button>
                 </div>
 
                 <!-- Скрытые поля для сохранения состояния -->
@@ -326,19 +322,6 @@
         submitSearchForm();
     }
 
-    function clearFilters() {
-        document.getElementById('keyword').value = '';
-        document.getElementById('dateFrom').value = '';
-
-        const url = new URL(window.location.href);
-        url.searchParams.delete('keyword');
-        url.searchParams.delete('dateFrom');
-        url.searchParams.set('page', '0');
-        url.searchParams.set('sort', 'createdAt');
-        url.searchParams.set('dir', 'desc');
-
-        window.location.href = url.toString();
-    }
 
     function submitSearchForm() {
         document.getElementById('searchForm').submit();
