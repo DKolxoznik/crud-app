@@ -21,7 +21,6 @@
 </head>
 <body>
 <div class="container mt-4">
-    <!-- Заголовок -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>
             <i class="bi bi-list-check"></i> Список записей
@@ -29,49 +28,76 @@
                 (<span th:text="${totalItems}">0</span> записей)
             </small>
         </h1>
-        <a th:href="@{/items/new}" class="btn btn-success">
-            <i class="bi bi-plus-circle"></i> Добавить
-        </a>
+
+        <!-- Блок выбора размера страницы (ВСЕГДА видимый) -->
+        <div class="d-flex align-items-center">
+            <span class="text-muted me-2">Записей на странице:</span>
+            <select class="form-select form-select-sm w-auto"
+                    id="pageSizeSelect" onchange="changePageSize(this)">
+                <option th:selected="${pageSize == 5}" value="5">5</option>
+                <option th:selected="${pageSize == 10}" value="10">10</option>
+                <option th:selected="${pageSize == 20}" value="20">20</option>
+                <option th:selected="${pageSize == 50}" value="50">50</option>
+                <option th:selected="${pageSize == 100}" value="100">100</option>
+            </select>
+
+            <!-- Кнопка добавления -->
+            <a th:href="@{/items/new}" class="btn btn-success ms-3">
+                <i class="bi bi-plus-circle"></i> Добавить
+            </a>
+        </div>
     </div>
 
     <!-- ПАНЕЛЬ ПОИСКА И ФИЛЬТРАЦИИ -->
     <div class="card mb-4">
         <div class="card-body">
-            <form th:action="@{/items}" method="get" class="row g-3">
-                <!-- Поиск по названию/описанию -->
-                <div class="col-md-6">
+            <form th:action="@{/items}" method="get" class="row g-3" id="searchForm">
+                <!-- Поиск по тексту -->
+                <div class="col-md-5">
                     <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="bi bi-search"></i>
-                            </span>
+                    <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                    </span>
                         <input type="text" class="form-control"
                                name="keyword"
+                               id="keyword"
                                th:value="${keyword}"
                                placeholder="Поиск по названию или описанию...">
                     </div>
                 </div>
 
-                <!-- Фильтр по дате -->
+                <!-- Фильтр по дате создания -->
                 <div class="col-md-4">
                     <div class="input-group">
-                            <span class="input-group-text">
-                                <i class="bi bi-calendar"></i>
-                            </span>
+                    <span class="input-group-text">
+                        <i class="bi bi-calendar"></i>
+                    </span>
                         <input type="date" class="form-control"
                                name="dateFrom"
+                               id="dateFrom"
                                th:value="${dateFrom}"
-                               placeholder="Дата от...">
+                               placeholder="Дата создания от...">
+                        <!-- Кнопка очистки даты -->
+                        <button type="button" class="btn btn-outline-secondary"
+                                onclick="clearDateFilter()"
+                                th:if="${dateFrom != null}">
+                            <i class="bi bi-x"></i>
+                        </button>
                     </div>
                 </div>
 
                 <!-- Кнопки -->
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-funnel"></i> Найти
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100 me-2">
+                        <i class="bi bi-funnel"></i> Применить фильтры
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary w-100 mt-2"
+                            onclick="clearFilters()">
+                        <i class="bi bi-x-circle"></i> Сбросить всё
                     </button>
                 </div>
 
-                <!-- Скрытые поля для пагинации -->
+                <!-- Скрытые поля для сохранения состояния -->
                 <input type="hidden" name="page" th:value="0">
                 <input type="hidden" name="size" th:value="${pageSize}">
                 <input type="hidden" name="sort" th:value="${sortField}">
@@ -88,21 +114,41 @@
                     <thead class="table-light">
                     <tr>
                         <th>
-                            <a th:href="@{/items(page=0, size=${pageSize}, sort='name', dir=${sortField == 'name' and sortDir == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, dateFrom=${dateFrom})}">
+                            <a th:href="@{/items(page=0, size=${pageSize}, sort='name',
+                     dir=${sortField == 'name' and sortDir == 'asc' ? 'desc' : 'asc'},
+                     keyword=${keyword}, dateFrom=${dateFrom})}">
                                 Название
                                 <i th:if="${sortField == 'name'}"
                                    th:class="${sortDir == 'asc' ? 'bi bi-sort-up' : 'bi bi-sort-down'}"></i>
                             </a>
                         </th>
-                        <th>Описание</th>
                         <th>
-                            <a th:href="@{/items(page=0, size=${pageSize}, sort='createdAt', dir=${sortField == 'createdAt' and sortDir == 'asc' ? 'desc' : 'asc'}, keyword=${keyword}, dateFrom=${dateFrom})}">
+                            <a th:href="@{/items(page=0, size=${pageSize}, sort='description',
+                     dir=${sortField == 'description' and sortDir == 'asc' ? 'desc' : 'asc'},
+                     keyword=${keyword}, dateFrom=${dateFrom})}">
+                                Описание
+                                <i th:if="${sortField == 'description'}"
+                                   th:class="${sortDir == 'asc' ? 'bi bi-sort-up' : 'bi bi-sort-down'}"></i>
+                            </a>
+                        </th>
+                        <th>
+                            <a th:href="@{/items(page=0, size=${pageSize}, sort='createdAt',
+                     dir=${sortField == 'createdAt' and sortDir == 'asc' ? 'desc' : 'asc'},
+                     keyword=${keyword}, dateFrom=${dateFrom})}">
                                 Создано
                                 <i th:if="${sortField == 'createdAt'}"
                                    th:class="${sortDir == 'asc' ? 'bi bi-sort-up' : 'bi bi-sort-down'}"></i>
                             </a>
                         </th>
-                        <th>Обновлено</th>
+                        <th>
+                            <a th:href="@{/items(page=0, size=${pageSize}, sort='updatedAt',
+                     dir=${sortField == 'updatedAt' and sortDir == 'asc' ? 'desc' : 'asc'},
+                     keyword=${keyword}, dateFrom=${dateFrom})}">
+                                Обновлено
+                                <i th:if="${sortField == 'updatedAt'}"
+                                   th:class="${sortDir == 'asc' ? 'bi bi-sort-up' : 'bi bi-sort-down'}"></i>
+                            </a>
+                        </th>
                         <th class="text-end">Действия</th>
                     </tr>
                     </thead>
@@ -245,22 +291,80 @@
 </div>
 
 <script>
-    // Изменение размера страницы
     function changePageSize(select) {
         const size = select.value;
         const url = new URL(window.location.href);
+
         url.searchParams.set('size', size);
-        url.searchParams.set('page', '0'); // Вернуться на первую страницу
+        url.searchParams.set('page', '0');
+
+        const sort = document.querySelector('input[name="sort"]')?.value || 'createdAt';
+        const dir = document.querySelector('input[name="dir"]')?.value || 'desc';
+        const keyword = document.querySelector('input[name="keyword"]')?.value || '';
+        const dateFrom = document.querySelector('input[name="dateFrom"]')?.value || '';
+
+        url.searchParams.set('sort', sort);
+        url.searchParams.set('dir', dir);
+        if (keyword) url.searchParams.set('keyword', keyword);
+        if (dateFrom) url.searchParams.set('dateFrom', dateFrom);
+
         window.location.href = url.toString();
     }
 
-    // Автофокус на поле поиска
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.querySelector('input[name="keyword"]');
         if (searchInput && !searchInput.value) {
             searchInput.focus();
         }
     });
+
+    function clearDateFilter() {
+        document.getElementById('dateFrom').value = '';
+        submitSearchForm();
+    }
+
+    function clearFilters() {
+        document.getElementById('keyword').value = '';
+        document.getElementById('dateFrom').value = '';
+
+        const url = new URL(window.location.href);
+        url.searchParams.delete('keyword');
+        url.searchParams.delete('dateFrom');
+        url.searchParams.set('page', '0');
+        url.searchParams.set('sort', 'createdAt');
+        url.searchParams.set('dir', 'desc');
+
+        window.location.href = url.toString();
+    }
+
+    function submitSearchForm() {
+        document.getElementById('searchForm').submit();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('dateFrom');
+        if (dateInput) {
+            dateInput.addEventListener('change', function() {
+                document.querySelector('input[name="page"]').value = '0';
+                submitSearchForm();
+            });
+        }
+
+        showActiveFilters();
+    });
+
+    function showActiveFilters() {
+        const keyword = document.getElementById('keyword')?.value;
+        const dateFrom = document.getElementById('dateFrom')?.value;
+
+        if (keyword || dateFrom) {
+            let filters = [];
+            if (keyword) filters.push(`Текст: "${keyword}"`);
+            if (dateFrom) filters.push(`Дата от: ${dateFrom}`);
+
+            console.log('Активные фильтры:', filters.join(', '));
+        }
+    }
 </script>
 </body>
 </html>

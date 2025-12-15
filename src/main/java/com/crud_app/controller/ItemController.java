@@ -7,6 +7,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @Controller
@@ -28,10 +31,23 @@ public class ItemController {
             @RequestParam(required = false) String dateFrom,
             Model model) {
 
+        // Валидация поля сортировки
+        List<String> validSortFields = Arrays.asList("name", "description", "createdAt", "updatedAt");
+        if (!validSortFields.contains(sort)) {
+            sort = "createdAt"; // Значение по умолчанию
+        }
+
+        // Валидация направления сортировки
+        if (!dir.equalsIgnoreCase("asc") && !dir.equalsIgnoreCase("desc")) {
+            dir = "desc";
+        }
+
         Page<Item> itemsPage;
 
         if (keyword != null && !keyword.trim().isEmpty()) {
             itemsPage = itemService.searchItems(keyword.trim(), page, size);
+        } else if (dateFrom != null && !dateFrom.trim().isEmpty()) {
+            itemsPage = itemService.findByCreatedAtAfter(dateFrom.trim(), page, size);
         } else {
             itemsPage = itemService.getAllItemsPaginated(page, size, sort, dir);
         }
@@ -43,7 +59,6 @@ public class ItemController {
         model.addAttribute("sortDir", dir);
         model.addAttribute("keyword", keyword);
         model.addAttribute("dateFrom", dateFrom);
-
         model.addAttribute("totalPages", itemsPage.getTotalPages());
         model.addAttribute("totalItems", itemsPage.getTotalElements());
 
