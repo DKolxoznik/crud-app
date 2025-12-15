@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,5 +49,19 @@ public class ItemService {
 
     public void deleteItem(UUID id) {
         repository.deleteById(id);
+    }
+
+    public Page<Item> findByCreatedAtAfter(String dateFrom, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        try {
+            // Пробуем разные форматы даты
+            LocalDate date = LocalDate.parse(dateFrom);
+            LocalDateTime startOfDay = date.atStartOfDay();
+
+            return repository.findByCreatedAtAfter(startOfDay, pageable);
+        } catch (Exception e) {
+            return repository.findAll(pageable);
+        }
     }
 }
