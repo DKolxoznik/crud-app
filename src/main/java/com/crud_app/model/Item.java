@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Entity
@@ -29,4 +30,20 @@ public class Item {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    public String getFormattedCreatedAt() {
+        if (createdAt == null) return "";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd | HH:mm:ss");
+        return createdAt.format(formatter);
+    }
+
+    public String getFormattedUpdatedAt() {
+        if (updatedAt == null) return "";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd | HH:mm:ss");
+        return updatedAt.format(formatter);
+    }
+
+    public boolean isUpdated() {
+        return updatedAt != null && !updatedAt.equals(createdAt);
+    }
 }
