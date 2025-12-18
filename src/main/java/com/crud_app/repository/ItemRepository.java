@@ -22,4 +22,9 @@ public interface ItemRepository extends JpaRepository<Item, UUID> {
             "LOWER(i.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(i.description) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Item> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    Page<Item> findByCreatedAtGreaterThanEqual(LocalDateTime date, Pageable pageable);
 }
+
+
+

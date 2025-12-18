@@ -17,10 +17,18 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.hamcrest.Matchers.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ItemController.class)
@@ -156,9 +164,10 @@ class ItemControllerTest {
         when(itemService.getItemById(itemId)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/items/edit/{id}", itemId))
-                .andExpect(status().isOk())
-                .andExpect(view().name("items/form"))
-                .andExpect(model().attributeExists("item"));
+                .andExpect(status().is3xxRedirection()) // Ожидаем редирект
+                .andExpect(redirectedUrl("/items"))
+                .andExpect(flash().attributeExists("error"))
+                .andExpect(flash().attribute("error", "Запись с ID " + itemId + " не найдена"));
 
         verify(itemService, times(1)).getItemById(itemId);
     }

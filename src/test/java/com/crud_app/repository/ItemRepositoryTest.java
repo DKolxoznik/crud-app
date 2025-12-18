@@ -12,9 +12,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,27 +28,33 @@ class ItemRepositoryTest {
     private Item testItem1;
     private Item testItem2;
     private Item testItem3;
+    private LocalDateTime now;
 
     @BeforeEach
     void setUp() {
         itemRepository.deleteAll();
 
+        now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
+
         testItem1 = new Item();
         testItem1.setName("Test Item 1");
         testItem1.setDescription("Description for item 1");
-        testItem1.setCreatedAt(LocalDateTime.now().minusDays(2));
+        testItem1.setCreatedAt(now.minusDays(2));
 
         testItem2 = new Item();
         testItem2.setName("Test Item 2");
         testItem2.setDescription("Another description");
-        testItem2.setCreatedAt(LocalDateTime.now().minusDays(1));
+        testItem2.setCreatedAt(now.minusDays(1).minusHours(6)); // 1.5 дня назад
 
         testItem3 = new Item();
         testItem3.setName("Different Item");
         testItem3.setDescription("Third description");
-        testItem3.setCreatedAt(LocalDateTime.now());
+        testItem3.setCreatedAt(now.minusHours(1)); // 1 час назад
 
         itemRepository.saveAll(List.of(testItem1, testItem2, testItem3));
+
+        // Очищаем контекст, чтобы получить свежие данные из базы
+        itemRepository.flush();
     }
 
     @Test
@@ -111,13 +117,13 @@ class ItemRepositoryTest {
     }
 
     @Test
-    void testFindByCreatedAtAfter() {
-        LocalDateTime yesterday = LocalDateTime.now().minusDays(1);
+    void testFindByCreatedAtGreaterThanEqual() {
+        LocalDateTime filterDate = now.minusDays(2);
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<Item> result = itemRepository.findByCreatedAtAfter(yesterday, pageable);
+        Page<Item> result = itemRepository.findByCreatedAtGreaterThanEqual(filterDate, pageable);
 
-        assertEquals(2, result.getTotalElements());
+        assertEquals(3, result.getTotalElements());
     }
 
     @Test
@@ -136,14 +142,11 @@ class ItemRepositoryTest {
 
     @Test
     void testUpdateItem() {
-        // Arrange
         String newName = "Updated Name";
         testItem1.setName(newName);
 
-        // Act
         Item updatedItem = itemRepository.save(testItem1);
 
-        // Assert
         assertEquals(newName, updatedItem.getName());
         assertNotNull(updatedItem.getUpdatedAt());
     }
