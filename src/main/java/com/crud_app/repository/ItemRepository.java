@@ -16,8 +16,15 @@ public interface ItemRepository extends JpaRepository<Item, UUID> {
 
     Page<Item> findByCreatedAtAfter(LocalDateTime dateFrom, Pageable pageable);
 
+    Page<Item> findByNameContainingIgnoreCase(String name, Pageable pageable);
+
     @Query("SELECT i FROM Item i WHERE " +
             "LOWER(i.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
             "LOWER(i.description) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Item> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+    Page<Item> findByCreatedAtGreaterThanEqual(LocalDateTime date, Pageable pageable);
 }
+
+
+

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,13 +32,11 @@ public class ItemController {
             @RequestParam(required = false) String dateFrom,
             Model model) {
 
-        // Валидация поля сортировки
         List<String> validSortFields = Arrays.asList("name", "description", "createdAt", "updatedAt");
         if (!validSortFields.contains(sort)) {
-            sort = "createdAt"; // Значение по умолчанию
+            sort = "createdAt";
         }
 
-        // Валидация направления сортировки
         if (!dir.equalsIgnoreCase("asc") && !dir.equalsIgnoreCase("desc")) {
             dir = "desc";
         }
@@ -78,11 +77,18 @@ public class ItemController {
     }
 
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable UUID id, Model model) {
-        Item item = itemService.getItemById(id)
-                .orElseThrow(() -> new RuntimeException("Запись не найдена"));
-        model.addAttribute("item", item);
-        return "items/form";
+    public String showEditForm(@PathVariable UUID id, Model model,
+                               RedirectAttributes redirectAttributes) {
+        return itemService.getItemById(id)
+                .map(item -> {
+                    model.addAttribute("item", item);
+                    return "items/form";
+                })
+                .orElseGet(() -> {
+                    redirectAttributes.addFlashAttribute("error",
+                            "Запись с ID " + id + " не найдена");
+                    return "redirect:/items";
+                });
     }
 
     @GetMapping("/delete/{id}")
