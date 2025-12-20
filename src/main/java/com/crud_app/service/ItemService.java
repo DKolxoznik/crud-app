@@ -55,7 +55,6 @@ public class ItemService {
         Pageable pageable = PageRequest.of(page, size);
 
         try {
-            // Пробуем разные форматы даты
             LocalDate date = LocalDate.parse(dateFrom);
             LocalDateTime startOfDay = date.atStartOfDay();
 
