@@ -38,19 +38,11 @@
         </dependency>
 
         <!-- Базы данных -->
-        <!-- УБРАТЬ scope runtime - H2 нужен и для компиляции -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <!-- scope по умолчанию (compile) -->
         </dependency>
 
-        <!-- PostgreSQL оставить как runtime, если используется только для продакшена -->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
-        </dependency>
 
         <!-- Утилиты -->
         <dependency>
