@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+
 import java.util.Random;
 
 @Configuration
@@ -39,19 +40,25 @@ public class DataInitializer {
                 Random random = new Random();
 
                 for (int i = 1; i <= 25; i++) {
-                    Item item = new Item();
-                    item.setName(names[random.nextInt(names.length)] + " #" + i);
-                    item.setDescription(descriptions[random.nextInt(descriptions.length)]);
+                    Item item = Item.builder()
+                            .name(names[random.nextInt(names.length)] + " #" + i)
+                            .description(descriptions[random.nextInt(descriptions.length)])
+                            .build();
 
                     repository.save(item);
 
                     if (random.nextBoolean()) {
                         try {
-                            Thread.sleep(1); // Минимальная задержка
+                            Thread.sleep(1);
                         } catch (InterruptedException e) {
                         }
-                        item.setDescription(item.getDescription() + " (обновлено)");
-                        repository.save(item);
+                        Item updatedItem = Item.builder()
+                                .id(item.getId())
+                                .name(item.getName())
+                                .description(item.getDescription() + " (обновлено)")
+                                .createdAt(item.getCreatedAt())
+                                .build();
+                        repository.save(updatedItem);
                     }
                 }
 
