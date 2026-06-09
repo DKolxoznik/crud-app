@@ -4,6 +4,7 @@ import com.crud_app.model.Item;
 import com.crud_app.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -20,8 +21,6 @@ public class ItemController {
 
     private final ItemService itemService;
 
-    // ГЛАВНАЯ СТРАНИЦА
-    // GET http://localhost:8080/items?page=0&size=10&sort=name&dir=asc&keyword=&dateFrom=
     @GetMapping
     public String showAllItems(
             @RequestParam(defaultValue = "0") int page,
@@ -71,29 +70,37 @@ public class ItemController {
     }
 
     @PostMapping
-    public String createItem(@ModelAttribute Item item) {
+    public String createItem(@ModelAttribute Item item, RedirectAttributes redirectAttributes) {
         itemService.saveItem(item);
+        redirectAttributes.addFlashAttribute("success", "Запись успешно создана");
         return "redirect:/items";
     }
 
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable UUID id, Model model,
-                               RedirectAttributes redirectAttributes) {
-        return itemService.getItemById(id)
-                .map(item -> {
-                    model.addAttribute("item", item);
-                    return "items/form";
-                })
-                .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("error",
-                            "Запись с ID " + id + " не найдена");
-                    return "redirect:/items";
-                });
+    public String showEditForm(@PathVariable UUID id, Model model) {
+        Item item = itemService.getItemByIdOrThrow(id);
+        model.addAttribute("item", item);
+        return "items/form";
+    }
+
+    @PostMapping("/update/{id}")
+    public String updateItem(@PathVariable UUID id,
+                             @ModelAttribute Item item,
+                             RedirectAttributes redirectAttributes) {
+        Item existing = itemService.getItemByIdOrThrow(id);
+        existing.setName(item.getName());
+        existing.setDescription(item.getDescription());
+        itemService.saveItem(existing);
+        redirectAttributes.addFlashAttribute("success", "Запись успешно обновлена");
+        return "redirect:/items";
     }
 
     @GetMapping("/delete/{id}")
-    public String deleteItem(@PathVariable UUID id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public String deleteItem(@PathVariable UUID id, RedirectAttributes redirectAttributes) {
+        itemService.getItemByIdOrThrow(id);
         itemService.deleteItem(id);
+        redirectAttributes.addFlashAttribute("success", "Запись удалена");
         return "redirect:/items";
     }
 }

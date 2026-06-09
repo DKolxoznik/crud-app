@@ -1,5 +1,6 @@
 package com.crud_app.service;
 
+import com.crud_app.exception.ResourceNotFoundException;
 import com.crud_app.model.Item;
 import com.crud_app.repository.ItemRepository;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,11 @@ public class ItemService {
 
     public Optional<Item> getItemById(UUID id) {
         return repository.findById(id);
+    }
+
+    public Item getItemByIdOrThrow(UUID id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Запись с ID " + id + " не найдена"));
     }
 
     public Item saveItem(Item item) {
