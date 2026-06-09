@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title>Список записей</title>
@@ -21,6 +22,29 @@
 </head>
 <body>
 <div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 py-2 border-bottom">
+        <div>
+            <span class="text-muted">Вы вошли как </span>
+            <strong sec:authentication="name">user</strong>
+            <span class="badge bg-secondary ms-1"
+                  sec:authorize="hasRole('ADMIN')">ADMIN</span>
+            <span class="badge bg-info text-dark ms-1"
+                  sec:authorize="hasRole('USER') and !hasRole('ADMIN')">USER</span>
+        </div>
+        <form th:action="@{/logout}" method="post" class="d-inline">
+            <button type="submit" class="btn btn-outline-secondary btn-sm">Выйти</button>
+        </form>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Закрыть"></button>
+    </div>
+
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>
             <i class="bi bi-list-check"></i> Список записей
@@ -178,9 +202,10 @@
                                    class="btn btn-outline-primary">
                                     <i class="bi bi-pencil"></i> Изменить
                                 </a>
-                                <a th:href="@{/items/delete/{id}(id=${item.id})}"
-                                   class="btn btn-outline-danger"
-                                   onclick="return confirm('Удалить запись &quot;' + [[${item.name}]] + '&quot;?')">
+                                <a sec:authorize="hasRole('ADMIN')"
+                                   th:href="@{/items/delete/{id}(id=${item.id})}"
+                                   class="btn btn-outline-danger btn-delete"
+                                   th:data-item-name="*{name}">
                                     <i class="bi bi-trash"></i> Удалить
                                 </a>
                             </div>
@@ -315,6 +340,15 @@
         if (searchInput && !searchInput.value) {
             searchInput.focus();
         }
+
+        document.querySelectorAll('.btn-delete').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                const name = this.dataset.itemName || 'эту запись';
+                if (!confirm('Удалить запись «' + name + '»?')) {
+                    e.preventDefault();
+                }
+            });
+        });
     });
 
     function clearDateFilter() {
@@ -352,5 +386,6 @@
         }
     }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

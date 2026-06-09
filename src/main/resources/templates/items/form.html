@@ -9,10 +9,8 @@
 <div class="container mt-4">
     <h1 th:text="${item.id == null} ? 'Создать новую запись' : 'Редактировать запись'"></h1>
 
-    <form th:action="@{/items}" th:object="${item}" method="post">
-
-        <!-- Поле ID (если редактирование) -->
-        <input type="hidden" th:field="*{id}">
+    <form th:action="${item.id == null} ? @{/items} : @{/items/update/{id}(id=${item.id})}"
+          th:object="${item}" method="post">
 
         <!-- Поле "Название" -->
         <div class="mb-3">
